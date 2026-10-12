@@ -65,6 +65,7 @@
             <span class="hand-drawn-star" aria-hidden="true">✳</span>
             <p>Turns out my camera roll has excellent taste.</p>
             <span class="memory-count">12 PHOTOS / ONE VERY COOL GIRL</span>
+            <button class="favorites-toggle" id="favorites-toggle" type="button" aria-pressed="false">♡ <span>Show favorites</span></button>
           </div>
           <div class="photo-grid" id="photo-grid" aria-label="Photo memories of Faith"></div>
         </div>
@@ -84,6 +85,11 @@
           <div class="letter-rule" aria-hidden="true"><span>♥</span></div>
           <p class="letter-copy">Faith, you make the little things feel like the best things. Your smile, your confidence, your whole one-of-one energy — I notice it all, and I adore all of it.</p>
           <p class="letter-copy">This is just a tiny page for a very big feeling: you’re loved, you’re admired, and I’m so lucky to call you mine.</p>
+          <div class="daily-note" aria-live="polite">
+            <p class="daily-note-label">A LITTLE REMINDER, JUST BECAUSE</p>
+            <p class="daily-note-message" id="daily-note-message">You make ordinary days feel like the best part of the story.</p>
+            <button class="daily-note-next" id="daily-note-next" type="button">Another little reminder <span aria-hidden="true">↗</span></button>
+          </div>
           <p class="letter-signature">All my love, <span aria-hidden="true">♥</span></p>
           <span class="letter-stamp" aria-hidden="true">YOU<br>ARE<br>THAT<br>GIRL</span>
         </article>
@@ -115,6 +121,12 @@
       <span class="finale-spark" aria-hidden="true">✳</span>
       <p class="eyebrow">THE SHORT VERSION</p>
       <h2>Still my favorite.<br><em>Every single day.</em></h2>
+      <button class="love-envelope" id="love-envelope" type="button" aria-label="Open a little love letter" aria-expanded="false" aria-controls="surprise-note">
+        <span class="envelope-visual" aria-hidden="true"><span class="envelope-letter">FOR FAITH</span><span class="envelope-flap"></span><span class="envelope-seal">♥</span></span>
+        <span class="envelope-caption">A LITTLE NOTE, JUST FOR YOU</span>
+      </button>
+      <p class="surprise-note" id="surprise-note" aria-live="polite" hidden></p>
+      <div class="heart-burst" id="heart-burst" aria-hidden="true"></div>
       <a class="finale-link" href="#home">Back to the top <span aria-hidden="true">↑</span></a>
       <span class="finale-heart" aria-hidden="true">♥</span>
     </section>

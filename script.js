@@ -31,17 +31,118 @@ const playerMessage = document.querySelector("#player-message");
 let currentPhoto = 0;
 let currentTrack = 0;
 let currentTrackStarted = false;
+let showFavoritesOnly = false;
+let lastLoveNoteIndex = 0;
+const savedPhotos = new Set(JSON.parse(localStorage.getItem("faith-favorite-photos") || "[]"));
+const loveNotes = [
+  "You make ordinary days feel like the best part of the story.",
+  "Your laugh is still one of my favorite sounds.",
+  "You can walk into a room and make it feel brighter.",
+  "You are beautiful, brilliant, and completely one of one.",
+  "I hope you see yourself the way I see you: absolutely magic.",
+  "Being your person is my favorite thing.",
+  "You deserve every soft, lovely thing this world can give you.",
+  "Still you. Still my favorite. Every single day."
+];
 
 function assetUrl(filename) {
   return `./${encodeURIComponent(filename).replaceAll("%2F", "/")}`;
 }
 
 photoGrid.innerHTML = photos.map((photo, index) => `
-  <button class="photo-tile reveal" type="button" data-photo-index="${index}" aria-label="Open photo ${index + 1}: ${photo.alt}">
-    <img src="${assetUrl(photo.src)}" alt="${photo.alt}" loading="lazy">
-    <span class="photo-caption">${photo.caption}<span>${String(index + 1).padStart(2, "0")}</span></span>
-  </button>
+  <div class="photo-tile reveal" data-photo-index="${index}">
+    <button class="photo-open" type="button" aria-label="Open photo ${index + 1}: ${photo.alt}">
+      <img src="${assetUrl(photo.src)}" alt="${photo.alt}" loading="lazy">
+      <span class="photo-caption">${photo.caption}<span>${String(index + 1).padStart(2, "0")}</span></span>
+    </button>
+    <button class="photo-favorite${savedPhotos.has(index) ? " is-saved" : ""}" type="button" data-favorite-index="${index}" aria-label="${savedPhotos.has(index) ? "Remove from" : "Add to"} favorites" aria-pressed="${savedPhotos.has(index)}">♥</button>
+  </div>
 `).join("");
+
+function updateFavoriteFilter() {
+  document.querySelectorAll(".photo-tile").forEach((tile) => {
+    tile.hidden = showFavoritesOnly && !savedPhotos.has(Number(tile.dataset.photoIndex));
+  });
+  const toggle = document.querySelector("#favorites-toggle");
+  toggle.setAttribute("aria-pressed", String(showFavoritesOnly));
+  toggle.querySelector("span").textContent = showFavoritesOnly ? "Show all photos" : "Show favorites";
+  document.querySelector(".memory-count").textContent = showFavoritesOnly
+    ? `${savedPhotos.size} SAVED ${savedPhotos.size === 1 ? "FAVORITE" : "FAVORITES"}`
+    : `12 PHOTOS / ${savedPhotos.size} ${savedPhotos.size === 1 ? "FAVORITE" : "FAVORITES"}`;
+}
+
+updateFavoriteFilter();
+
+document.querySelector("#favorites-toggle").addEventListener("click", () => {
+  showFavoritesOnly = !showFavoritesOnly;
+  updateFavoriteFilter();
+});
+
+photoGrid.addEventListener("click", (event) => {
+  const favoriteButton = event.target.closest("[data-favorite-index]");
+  if (favoriteButton) {
+    const index = Number(favoriteButton.dataset.favoriteIndex);
+    if (savedPhotos.has(index)) savedPhotos.delete(index);
+    else savedPhotos.add(index);
+    localStorage.setItem("faith-favorite-photos", JSON.stringify([...savedPhotos]));
+    favoriteButton.classList.toggle("is-saved", savedPhotos.has(index));
+    favoriteButton.setAttribute("aria-pressed", String(savedPhotos.has(index)));
+    favoriteButton.setAttribute("aria-label", `${savedPhotos.has(index) ? "Remove from" : "Add to"} favorites`);
+    updateFavoriteFilter();
+    return;
+  }
+  const photoButton = event.target.closest(".photo-open");
+  if (!photoButton) return;
+  const tile = photoButton.closest("[data-photo-index]");
+  startPlayback();
+  showPhoto(Number(tile.dataset.photoIndex));
+  photoDialog.showModal();
+});
+
+document.querySelector("#daily-note-next").addEventListener("click", () => {
+  let nextIndex = lastLoveNoteIndex;
+  while (nextIndex === lastLoveNoteIndex) nextIndex = Math.floor(Math.random() * loveNotes.length);
+  lastLoveNoteIndex = nextIndex;
+  document.querySelector("#daily-note-message").textContent = loveNotes[nextIndex];
+});
+
+const surpriseNotes = [
+  "In every room, in every version of my future, I hope it is still you.",
+  "You are the plot twist that made my whole story better.",
+  "My favorite place is wherever I get to see you smile.",
+  "No grand gesture needed. I choose you in all the little moments, too."
+];
+let lastSurpriseIndex = -1;
+const envelopeButton = document.querySelector("#love-envelope");
+const surpriseNote = document.querySelector("#surprise-note");
+const heartBurst = document.querySelector("#heart-burst");
+
+envelopeButton.addEventListener("click", () => {
+  const isOpen = envelopeButton.classList.toggle("is-open");
+  envelopeButton.setAttribute("aria-expanded", String(isOpen));
+  surpriseNote.hidden = !isOpen;
+  if (!isOpen) return;
+
+  let nextIndex = lastSurpriseIndex;
+  while (nextIndex === lastSurpriseIndex) nextIndex = Math.floor(Math.random() * surpriseNotes.length);
+  lastSurpriseIndex = nextIndex;
+  surpriseNote.textContent = surpriseNotes[nextIndex];
+
+  const heartColors = ["#d94f82", "#efa9c6", "#f4dc91", "#b95f87"];
+  for (let index = 0; index < 12; index += 1) {
+    const heart = document.createElement("span");
+    heart.className = "burst-heart";
+    heart.textContent = "♥";
+    heart.style.setProperty("--heart-x", `${Math.round(Math.random() * 300 - 150)}px`);
+    heart.style.setProperty("--heart-y", `${Math.round(Math.random() * -130 - 55)}px`);
+    heart.style.setProperty("--heart-scale", (0.55 + Math.random() * 0.9).toFixed(2));
+    heart.style.setProperty("--heart-turn", `${Math.round(Math.random() * 100 - 50)}deg`);
+    heart.style.setProperty("--heart-delay", `${(Math.random() * 0.16).toFixed(2)}s`);
+    heart.style.setProperty("--heart-color", heartColors[index % heartColors.length]);
+    heart.addEventListener("animationend", () => heart.remove(), { once: true });
+    heartBurst.append(heart);
+  }
+});
 
 async function startPlayback() {
   if (!audio.paused) return;
@@ -81,13 +182,6 @@ function showPhoto(index) {
   dialogCounter.textContent = `${String(currentPhoto + 1).padStart(2, "0")} / ${String(photos.length).padStart(2, "0")}`;
 }
 
-photoGrid.addEventListener("click", (event) => {
-  const tile = event.target.closest("[data-photo-index]");
-  if (!tile) return;
-  startPlayback();
-  showPhoto(Number(tile.dataset.photoIndex));
-  photoDialog.showModal();
-});
 photoGrid.addEventListener("pointerover", (event) => {
   const tile = event.target.closest("[data-photo-index]");
   if (event.pointerType === "mouse" && tile && !tile.contains(event.relatedTarget)) startPlayback();
